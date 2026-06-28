@@ -13,10 +13,11 @@ Most support volume is repetitive: *"Where's my order?"*, *"How do I return this
 ## Key capabilities (what it proves)
 
 - **Function calling loop:** the model chooses a tool, the app executes it, the result is fed back, and the model replies — fully orchestrated.
-- **Real actions, not just answers:** `get_order_status`, `list_my_orders`, `start_return`, `get_product_info`, `get_return_policy` against SQLite.
+- **Real actions, not just answers:** `get_order_status`, `list_my_orders`, `start_return`, **`cancel_order`**, `get_product_info`, `get_return_policy` against SQLite.
 - **Conversation memory:** identity captured once is reused across turns.
-- **Guardrails:** personal-data tools require a verified email; cross-account access is blocked; returns enforce the policy window.
+- **Guardrails:** personal-data tools require a verified email; cross-account access is blocked; returns enforce the policy window; **cancellations are refused once an order has shipped** (state-machine guard).
 - **Pluggable provider:** Google **Gemini** native function calling in production; a deterministic **offline mock** router for tests/CI/demos (no key).
+- **Production-ready:** structured logging of every tool call (`LOG_LEVEL`), `Dockerfile` + `docker-compose.yml`, GitHub Actions CI.
 - **Two interfaces:** FastAPI `/chat` (per-session memory) and a Streamlit chat UI.
 
 ## Demo
@@ -78,7 +79,9 @@ The provider only decides *what to do next*; the agent executes tools and keeps 
 - **Backend:** SQLite (customers / products / orders / returns)
 - **LLM:** Google Gemini function calling (`google-generativeai`), pluggable
 - **UI:** Streamlit chat
-- **Tests:** pytest (12 tests covering tools, guardrails, and the agent loop)
+- **Observability:** structured logging via `src/logging_utils.py` (`LOG_LEVEL` env, per-tool-call logs)
+- **Deploy:** `Dockerfile` + `docker-compose.yml`; GitHub Actions CI runs the suite
+- **Tests:** pytest (20 tests covering tools, guardrails, cancellation state guards, and the agent loop)
 
 ## Setup & run
 
@@ -106,11 +109,15 @@ Enable Gemini in `.env`: `LLM_PROVIDER=gemini` and `GEMINI_API_KEY=...`.
 │   ├── config.py           # settings from .env
 │   ├── database.py         # SQLite schema + connection
 │   ├── generate_data.py    # seed customers/products/orders
-│   ├── tools.py            # callable tools + JSON schemas + guardrails
+│   ├── tools.py            # callable tools (incl. cancel_order) + JSON schemas + guardrails
 │   ├── guardrails.py       # identity capture, input hygiene
 │   ├── llm_provider.py     # Gemini function calling + offline mock router
+│   ├── logging_utils.py    # structured logging + timing
 │   └── agent.py            # function-calling loop + conversation memory
-├── tests/                  # 12 pytest tests
+├── tests/                  # 20 pytest tests
+├── Dockerfile              # containerised FastAPI service
+├── docker-compose.yml
+├── .github/workflows/ci.yml
 ├── requirements.txt
 ├── .env.example
 └── .gitignore

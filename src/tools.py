@@ -91,6 +91,29 @@ def start_return(ctx: ToolContext, order_id: str, reason: str = "") -> dict:
     return {"return_id": return_id, "order_id": row["order_id"], "status": "requested", "reason": reason}
 
 
+def cancel_order(ctx: ToolContext, order_id: str) -> dict:
+    """Cancel an order that hasn't shipped yet (status == 'placed')."""
+    row = _order_row(ctx.db_path, order_id)
+    if row is None:
+        return {"error": f"No order found with id {order_id}."}
+    if ctx.email and row["email"] != ctx.email:
+        return {"error": "This order belongs to a different account."}
+    if row["status"] == "cancelled":
+        return {"order_id": row["order_id"], "status": "cancelled", "note": "Already cancelled."}
+    if row["status"] != "placed":
+        return {
+            "error": (
+                f"Only orders that haven't shipped can be cancelled "
+                f"(this order is '{row['status']}'). Try a return once it's delivered."
+            )
+        }
+    with connect(ctx.db_path) as conn:
+        conn.execute(
+            "UPDATE orders SET status = 'cancelled' WHERE order_id = ?", (row["order_id"],)
+        )
+    return {"order_id": row["order_id"], "status": "cancelled", "refund": "initiated"}
+
+
 def get_product_info(ctx: ToolContext, query: str) -> dict:
     with connect(ctx.db_path) as conn:
         rows = conn.execute(
@@ -144,6 +167,17 @@ TOOLS: dict[str, ToolSpec] = {
         },
         func=start_return,
         requires_auth=False,
+    ),
+    "cancel_order": ToolSpec(
+        name="cancel_order",
+        description="Cancel an order that has not shipped yet. Requires the customer to be authenticated.",
+        parameters={
+            "type": "object",
+            "properties": {"order_id": {"type": "string", "description": "Order id to cancel"}},
+            "required": ["order_id"],
+        },
+        func=cancel_order,
+        requires_auth=True,
     ),
     "get_product_info": ToolSpec(
         name="get_product_info",

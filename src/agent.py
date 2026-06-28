@@ -16,7 +16,10 @@ from dataclasses import dataclass, field
 from .config import Settings, get_settings
 from .guardrails import customer_exists, extract_email, sanitize_input
 from .llm_provider import SupportProvider, get_provider
+from .logging_utils import get_logger
 from .tools import ToolContext, execute_tool
+
+log = get_logger(__name__)
 
 
 @dataclass
@@ -52,6 +55,8 @@ class SupportAgent:
             resp = self.provider.step(self.transcript)
             if resp.tool_call is not None:
                 result = execute_tool(resp.tool_call.name, self.ctx, resp.tool_call.args)
+                log.info("tool_call %s(%s) -> %s", resp.tool_call.name, resp.tool_call.args,
+                         "error" if "error" in result else "ok")
                 tool_calls.append({"name": resp.tool_call.name, "args": resp.tool_call.args, "result": result})
                 self.transcript.append({"role": "tool", "name": resp.tool_call.name, "result": result})
                 continue

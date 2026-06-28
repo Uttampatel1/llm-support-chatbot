@@ -72,6 +72,13 @@ def verbalize(name: str, result: dict) -> str:
             f"Your return **{result['return_id']}** for {result['order_id']} has been "
             f"requested. You'll get return instructions by email."
         )
+    if name == "cancel_order":
+        if result.get("note"):
+            return f"Order {result['order_id']} is already cancelled."
+        return (
+            f"Order **{result['order_id']}** has been cancelled and a refund has been "
+            f"{result.get('refund', 'initiated')}."
+        )
     if name == "get_product_info":
         lines = [f"- {m['name']} ({m['sku']}): ${m['price']:.2f}, {m['stock']} in stock"
                  for m in result["matches"]]
@@ -99,6 +106,8 @@ class MockProvider(SupportProvider):
 
         if "return policy" in low or (("policy" in low) and "return" in low):
             return ProviderResponse(tool_call=ToolCall("get_return_policy", {}))
+        if "cancel" in low and order_id:
+            return ProviderResponse(tool_call=ToolCall("cancel_order", {"order_id": order_id}))
         if "return" in low and order_id:
             reason = "customer requested" if "because" not in low else low.split("because", 1)[1].strip()
             return ProviderResponse(tool_call=ToolCall("start_return", {"order_id": order_id, "reason": reason}))

@@ -1,0 +1,10 @@
+services:
+  app:
+    build: .
+    image: llm-support-chatbot:latest
+    container_name: llm-support-chatbot
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    restart: unless-stopped

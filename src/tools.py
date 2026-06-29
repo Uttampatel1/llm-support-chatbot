@@ -135,6 +135,27 @@ def get_return_policy(ctx: ToolContext) -> dict:
     }
 
 
+def escalate_to_human(ctx: ToolContext, reason: str, category: str = "general") -> dict:
+    """Open a support ticket and hand the conversation to a human agent."""
+    ticket_id = "TKT-" + uuid.uuid4().hex[:8].upper()
+    priority = "high" if category in ("frustration", "repeated_failure") else "normal"
+    with connect(ctx.db_path) as conn:
+        conn.execute(
+            "INSERT INTO support_tickets "
+            "(ticket_id, email, category, priority, reason, status, created_at) "
+            "VALUES (?, ?, ?, ?, ?, 'open', ?)",
+            (ticket_id, ctx.email, category, priority, reason,
+             datetime.utcnow().isoformat(timespec="seconds")),
+        )
+    return {
+        "ticket_id": ticket_id,
+        "status": "open",
+        "category": category,
+        "priority": priority,
+        "reason": reason,
+    }
+
+
 # --- registry ---------------------------------------------------------------
 TOOLS: dict[str, ToolSpec] = {
     "get_order_status": ToolSpec(
@@ -194,6 +215,25 @@ TOOLS: dict[str, ToolSpec] = {
         description="Explain the store's return policy and window.",
         parameters={"type": "object", "properties": {}},
         func=get_return_policy,
+    ),
+    "escalate_to_human": ToolSpec(
+        name="escalate_to_human",
+        description=(
+            "Hand off to a human support agent by opening a ticket. Use when the "
+            "customer asks for a human, is upset, or the bot cannot resolve the issue."
+        ),
+        parameters={
+            "type": "object",
+            "properties": {
+                "reason": {"type": "string", "description": "Short summary of why escalation is needed"},
+                "category": {
+                    "type": "string",
+                    "description": "explicit_request | frustration | repeated_failure | general",
+                },
+            },
+            "required": ["reason"],
+        },
+        func=escalate_to_human,
     ),
 }
 

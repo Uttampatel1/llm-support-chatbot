@@ -22,6 +22,9 @@ class Settings:
     gemini_model: str = _get("GEMINI_MODEL", "gemini-2.0-flash")
     db_path: str = _get("DB_PATH", "data/store.db")
     max_tool_steps: int = int(_get("MAX_TOOL_STEPS", "4"))
+    # Human-handoff guardrail: escalate to a human after this many tool failures.
+    escalation_enabled: bool = _get("ESCALATION_ENABLED", "true").lower() in ("1", "true", "yes")
+    escalation_failure_threshold: int = int(_get("ESCALATION_FAILURE_THRESHOLD", "2"))
 
 
 @lru_cache

@@ -24,8 +24,9 @@ Most support volume is repetitive: *"Where's my order?"*, *"How do I return this
 ## Key capabilities (what it proves)
 
 - **Function calling loop:** the model chooses a tool, the app executes it, the result is fed back, and the model replies — fully orchestrated.
-- **Real actions, not just answers:** `get_order_status`, `list_my_orders`, `start_return`, **`cancel_order`**, `get_product_info`, `get_return_policy` against SQLite.
+- **Real actions, not just answers:** `get_order_status`, `list_my_orders`, `start_return`, **`cancel_order`**, `get_product_info`, `get_return_policy`, **`escalate_to_human`** against SQLite.
 - **Conversation memory:** identity captured once is reused across turns.
+- **Human-handoff guardrail:** a deterministic detector escalates to a human — opening a priority-tagged **support ticket** — when the customer asks for an agent, shows frustration, or the bot's tools fail repeatedly. Knowing when *not* to answer is a production-grade safety behaviour. See `src/escalation.py`.
 - **Guardrails:** personal-data tools require a verified email; cross-account access is blocked; returns enforce the policy window; **cancellations are refused once an order has shipped** (state-machine guard).
 - **Pluggable provider:** Google **Gemini** native function calling in production; a deterministic **offline mock** router for tests/CI/demos (no key).
 - **Production-ready:** structured logging of every tool call (`LOG_LEVEL`), `Dockerfile` + `docker-compose.yml`, GitHub Actions CI.
@@ -92,7 +93,7 @@ The provider only decides *what to do next*; the agent executes tools and keeps 
 - **UI:** Streamlit chat
 - **Observability:** structured logging via `src/logging_utils.py` (`LOG_LEVEL` env, per-tool-call logs)
 - **Deploy:** `Dockerfile` + `docker-compose.yml`; GitHub Actions CI runs the suite
-- **Tests:** pytest (20 tests covering tools, guardrails, cancellation state guards, and the agent loop)
+- **Tests:** pytest (28 tests covering tools, guardrails, cancellation state guards, the agent loop, and human-handoff escalation)
 
 ## Setup & run
 

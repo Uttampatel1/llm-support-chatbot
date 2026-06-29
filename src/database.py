@@ -39,6 +39,15 @@ CREATE TABLE IF NOT EXISTS returns (
     created_at TEXT NOT NULL,
     FOREIGN KEY (order_id) REFERENCES orders(order_id)
 );
+CREATE TABLE IF NOT EXISTS support_tickets (
+    ticket_id  TEXT PRIMARY KEY,
+    email      TEXT,                   -- may be null if not yet identified
+    category   TEXT NOT NULL,          -- explicit_request | frustration | repeated_failure | general
+    priority   TEXT NOT NULL,          -- normal | high
+    reason     TEXT,
+    status     TEXT NOT NULL,          -- open | resolved
+    created_at TEXT NOT NULL
+);
 """
 
 

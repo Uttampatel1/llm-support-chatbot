@@ -125,8 +125,9 @@ Enable Gemini in `.env`: `LLM_PROVIDER=gemini` and `GEMINI_API_KEY=...`.
 │   ├── guardrails.py       # identity capture, input hygiene
 │   ├── llm_provider.py     # Gemini function calling + offline mock router
 │   ├── logging_utils.py    # structured logging + timing
-│   └── agent.py            # function-calling loop + conversation memory
-├── tests/                  # 20 pytest tests
+│   ├── agent.py            # function-calling loop + conversation memory
+│   └── escalation.py       # human-handoff detector (request / frustration / failures)
+├── tests/                  # 28 pytest tests
 ├── Dockerfile              # containerised FastAPI service
 ├── docker-compose.yml
 ├── .github/workflows/ci.yml
@@ -138,7 +139,7 @@ Enable Gemini in `.env`: `LLM_PROVIDER=gemini` and `GEMINI_API_KEY=...`.
 ## Possible extensions
 
 - **RAG over a help center** for open-ended FAQs (combine with project 01).
-- **Human handoff** when confidence is low or the request is out of scope.
+- **Sentiment-model handoff** to complement the rule-based escalation already built in.
 - **Auth** via real session tokens / OTP instead of email capture.
 - **More tools:** address changes, cancellations, refunds, shipment tracking webhooks.
 - **Analytics:** deflection rate, tool success rate, escalation reasons.

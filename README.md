@@ -6,6 +6,17 @@ A support assistant for a fictional tea & coffee store that **answers FAQs and t
 
 ---
 
+<!-- portfolio-visuals -->
+
+## 🔧 How it works
+
+![LLM Customer-Support Chatbot with Function Calling — architecture & data flow](./architecture.svg)
+
+*End-to-end flow from input to output — see [`architecture.svg`](./architecture.svg).*
+
+---
+
+
 ## What it does / who it's for
 
 Most support volume is repetitive: *"Where's my order?"*, *"How do I return this?"*, *"Is X in stock?"*. This bot resolves those end-to-end by combining natural-language understanding with **function calling** into a real (mock) backend — deflecting tickets while staying safe (a customer can only see their own data).
